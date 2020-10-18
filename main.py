@@ -3,6 +3,7 @@ import config
 import random
 from telebot import types
 import database as db
+from records import Records as records
 from categories import Categories
 
 bot = telebot.TeleBot(config.API_TOKEN)
@@ -28,7 +29,8 @@ def welcome(message):
 
 @bot.message_handler(commands=['help'])
 def helper(message):
-    bot.send_message(message.chat.id,"Сегодняшняя статистика: /today \n"
+    bot.send_message(message.chat.id,
+                     "Последние записи: /cases \n"
                      "За текущий месяц: /month \n"
                      "Последние внесённые записи: /expenses \n"
                      "Категории: /categories")
@@ -40,6 +42,35 @@ def categories_list(message):
     answer_message = "Категории:\n\n* " + \
                  ("\n* ".join([c.name + ' (' + ", ".join(c.aliases) + ')' for c in categories]))
     bot.send_message(message.chat.id, answer_message)
+
+
+@bot.message_handler(commands=['cases'])
+def list_cases(message):
+    last_records = records.last(self=records)
+    if not last_records:
+        bot.send_message(message.chat.id, 'Нет записей')
+        return
+
+    last_records_rows = [
+        f"{record.time_count} учила {record.category_codename} — нажми "
+        f"/del{record.id} для удаления"
+        for record in last_records]
+    answer_message = "Последние сохранённые записи:\n\n* " + "\n\n* "\
+            .join(last_records_rows)
+    bot.send_message(message.chat.id, answer_message )
+
+
+#@bot.message_handler(content_types=['text'])
+#async def add_record(message: types.Message):
+    #   try:
+    #       record = records.add_record(message.text)
+    #  except exceptions.NotCorrectMessage as e:
+    #     bot.send_message(message.chat.id,str(e))
+    #     return
+    # answer_message = (
+    #    f"Добавлены траты {record.amount} руб на {record.category_name}.\n\n"
+    #    f"{records.get_today_statistics()}")
+# bot.send_message(message.chat.id, answer_message)
 
 
 

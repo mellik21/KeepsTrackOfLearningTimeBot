@@ -7,10 +7,11 @@ create table category(
 
 create table record(
     id integer primary key,
-    time_count integer,1111
+    created datetime,
+    time_count integer,
     category_codename integer,
     raw_text text,
-    FOREIGN KEY(category_codename) REFERENCES category(codename)
+    FOREIGN KEY(category_name) REFERENCES category(codename)
 );
 
 insert into category (codename, name, aliases)

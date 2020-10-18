@@ -14,7 +14,6 @@ class Categories:
         self._categories = self._load_categories()
 
     def _load_categories(self) -> List[Category]:
-        #Возвращает справочник категорий расходов из БД
         categories = db.fetchall(
             "category", "codename name aliases".split()
         )
