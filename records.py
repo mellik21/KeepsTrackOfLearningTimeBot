@@ -38,26 +38,24 @@ class Records:
                 finded = record
         return finded
 
-    def last(self) -> List[Record]:
+    @classmethod
+    def last(cls) -> List[Record]:
         cursor = db.get_cursor()
         cursor.execute(
             "select r.id, r.time_count, r.category_codename, r.raw_text "
-            "from record r "+
-            #left join category c "
-            # "on r.category_name=c.codename "
+            "from record r " +
             "order by r.created desc limit 10")
         rows = cursor.fetchall()
         last_expenses = [Record(id=row[0], time_count=row[1],
                                 category_codename=row[2], raw_text=row[3]) for row in rows]
         return last_expenses
 
-
 def add_record(raw_message: str) -> Record:
     parsed_message = _parse_message(raw_message)
     category = Categories().get_category(
         parsed_message.category_text)
 
-    inserted_row_id = db.insert("record", {
+    db.insert("record", {
         "time_count": parsed_message.time_count,
         "created": _get_now_formatted(),
         "category_codename": category.codename,
