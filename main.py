@@ -1,4 +1,7 @@
+import datetime
 from sqlite3 import IntegrityError
+
+import pytz
 import telebot
 from resourses import config
 from telebot import types
@@ -23,8 +26,9 @@ def welcome(message):
 @bot.message_handler(commands=['help'])
 def helper(message):
     bot.send_message(message.chat.id,
-                     "Последние записи: /cases \n"
+                     "Последние записи: /records\n"
                      "Добавить категорию: /add_category\n"
+                     "Добавить запись: /add_time_record\n"
                      "Категории: /categories")
 
 
@@ -56,7 +60,8 @@ def add_category_to_db(message):
         markup = types.InlineKeyboardMarkup(row_width=1)
         markup.add(types.InlineKeyboardButton("⬅", callback_data='c_back'))
         msg = bot.send_message(message.chat.id,
-                               'Категория с данным codename уже существует. Codename должен быть уникальным. \nПример: codename;name;a1,a2,a3',
+                               'Категория с данным codename уже существует. Codename должен быть уникальным. '
+                               '\nПример: codename;name;a1,a2,a3',
                                reply_markup=markup)
         bot.register_next_step_handler(msg, add_category_to_db)
 
@@ -69,6 +74,40 @@ def add_category_to_db(message):
         bot.register_next_step_handler(msg, add_category_to_db)
 
 
+@bot.message_handler(commands=['add_time_record'])
+def add_time_record_header(message):
+    msg = bot.send_message(message.chat.id,
+                           'Введите время и категорию черезз ; ')
+    bot.register_next_step_handler(msg, add_time_record_to_db)
+
+
+def add_time_record_to_db(message):
+    try:
+        args = message.text.split(';')
+        db.insert('record', {'id': None,
+                             # 'created': datetime.datetime.now(pytz.timezone("Europe/Moscow")).strftime("%Y-%m-%d
+                             # %H:%M:%S"),
+                             'time_count': args[0], 'category_codename': args[1], 'raw_text': message.text})
+        bot.send_message(message.chat.id,
+                         text='Запись успешно добавлена'
+                              '\nСписок записей: /records ')
+
+    except Exception as e:
+        print(repr(e))
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        markup.add(types.InlineKeyboardButton("⬅", callback_data='c_back'))
+        msg = bot.send_message(message.chat.id, 'Неверный формат записи. \nПример: 10 минут ; чтение',
+                               reply_markup=markup)
+        bot.register_next_step_handler(msg, add_time_record_to_db)
+
+
+@bot.message_handler(commands=['records'])
+def records_list(message):
+    answer_message = "Записи:\n\n* " + \
+                     ("\n* ".join([r.time_count + "  " + r.category_codename for r in records.load_records()]))
+    bot.send_message(message.chat.id, answer_message)
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     try:
@@ -76,15 +115,16 @@ def callback_inline(call):
             if call.data == 'm_category':
                 add_category_header(call.message)
             elif call.data == 'm_record':
-                bot.send_message(call.message.chat.id, 'Запись добавлена(' + call.message.text + ')')
+                add_time_record_header(call.message)
             elif call.data == 'm_back':
                 helper(call.message)
             elif call.data == 'c_back':
                 bot.clear_step_handler_by_chat_id(chat_id=call.message.chat.id)
 
             bot.edit_message_text(chat_id=call.message.chat.id,
-                                  message_id=call.message.message_id, text='Спасибо что заглянул',
+                                  message_id=call.message.message_id, text=call.message.text,
                                   reply_markup=None)
+
     except Exception as e:
         print(repr(e))
 

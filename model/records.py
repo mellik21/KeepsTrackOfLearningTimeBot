@@ -15,20 +15,29 @@ class Record(NamedTuple):
     id: str
     time_count: str  # предположительно всегда в минутах
     category_codename: str
-    raw_text: List[str]
+    raw_text: str
 
 
 class Records:
     def __init__(self):
         self._records = self._load_records()
 
-    def _load_records(self) -> List[Record]:
-        records = db.fetchall(
+    @staticmethod
+    def load_records() -> List[Record]:
+        rows = db.fetchall(
             "record", "id time_count category_codename raw_text".split()
         )
+        records = []
+        for index, record in enumerate(rows):
+            records.append(Record(
+                id=record['id'],
+                time_count=record['time_count'],
+                category_codename=record['category_codename'],
+                raw_text=record['raw_text']
+            ))
         return records
 
-    def get_all_records(self) -> List[Record]:
+    def get_all_records(self) -> List[tuple]:
         return self._records
 
     def get_record(self, record_id: str) -> Record:
@@ -49,6 +58,7 @@ class Records:
         last_expenses = [Record(id=row[0], time_count=row[1],
                                 category_codename=row[2], raw_text=row[3]) for row in rows]
         return last_expenses
+
 
 def add_record(raw_message: str) -> Record:
     parsed_message = _parse_message(raw_message)
@@ -79,5 +89,5 @@ def _parse_message(raw_message: str) -> Message:
 
 
 def _get_now_formatted(self) -> str:
-    now = datetime.datetime.now(pytz.timezone("Europe/Moscow"))
+    now = datetime.datetime.now(pytz.timezone("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S")
     return now.strftime("%Y-%m-%d %H:%M:%S")
