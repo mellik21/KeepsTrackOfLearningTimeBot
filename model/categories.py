@@ -1,7 +1,7 @@
 """Работа с категориями расходов"""
 from typing import Dict, List, NamedTuple
 
-import database as db
+from resourses.database import database as db
 
 
 class Category(NamedTuple):

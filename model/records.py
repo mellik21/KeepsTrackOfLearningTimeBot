@@ -1,9 +1,9 @@
-from typing import Dict, List, NamedTuple
+from typing import List, NamedTuple
 import datetime
 import pytz
 import re
-import database as db
-from categories import Categories
+from resourses.database import database as db
+from model.categories import Categories
 
 
 class Message(NamedTuple):

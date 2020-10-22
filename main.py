@@ -1,19 +1,17 @@
 from sqlite3 import IntegrityError
-
 import telebot
-import config
-import random
+from resourses import config
 from telebot import types
-import database as db
-from records import Records as records
-from categories import Categories
+from model.records import Records as records
+from model.categories import Categories, Category
+import resourses.database.database as db
 
 bot = telebot.TeleBot(config.API_TOKEN)
 
 
 @bot.message_handler(commands=['start'])
-def menu(message):
-    sti = open('static/welcome.webp', 'rb')
+def welcome(message):
+    sti = open('resourses/welcome.webp', 'rb')
     bot.send_sticker(message.chat.id, sti)
     bot.send_message(message.chat.id, 'Добро пожаловать, {0.first_name}!\n Я - <b>СобакаБот</b>, созданный '
                                       'чтобы помочь вам отслеживать свое время в обучении! '
@@ -28,6 +26,14 @@ def helper(message):
                      "Последние записи: /cases \n"
                      "Добавить категорию: /add_category\n"
                      "Категории: /categories")
+
+
+@bot.message_handler(commands=['categories'])
+def categories_list(message):
+    categories = Categories().get_all_categories()
+    answer_message = "Категории:\n\n* " + \
+                     ("\n* ".join([c.name + ' (' + ", ".join(c.aliases) + ')' for c in categories]))
+    bot.send_message(message.chat.id, answer_message)
 
 
 @bot.message_handler(commands=['add_category'])
@@ -80,15 +86,7 @@ def callback_inline(call):
                                   message_id=call.message.message_id, text='Спасибо что заглянул',
                                   reply_markup=None)
     except Exception as e:
-        print('AAAA ERRORRR ' + repr(e))
-
-
-@bot.message_handler(commands=['categories'])
-def categories_list(message):
-    categories = Categories().get_all_categories()
-    answer_message = "Категории:\n\n* " + \
-                     ("\n* ".join([c.name + ' (' + ", ".join(c.aliases) + ')' for c in categories]))
-    bot.send_message(message.chat.id, answer_message)
+        print(repr(e))
 
 
 @bot.message_handler(commands=['cases'])
