@@ -9,6 +9,7 @@ class Category(NamedTuple):
     name: str  # имя категории
     aliases: List[str]  # варианты названия категории
 
+
 class Categories:
     def __init__(self):
         self._categories = self._load_categories()
@@ -21,7 +22,7 @@ class Categories:
         return categories
 
     def _fill_aliases(self, categories: List[Dict]) -> List[Category]:
-        #Заполняет по каждой категории aliases
+        # Заполняет по каждой категории aliases
         categories_result = []
         for index, category in enumerate(categories):
             aliases = category["aliases"].split(",")
